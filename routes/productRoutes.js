@@ -42,15 +42,43 @@ router.get('/', async (req, res) => {
     }
 });
 
+// ✅ Get featured products for dashboard
+// ✅ Get featured products
+router.get('/featured', async (req, res) => {
+    try {
+        const featuredProducts = await Product.find({ featured: true }) // <-- ✅ Filter only featured
+            .sort({ createdAt: -1 })
+            .limit(4);
+        res.json(featuredProducts);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+});
+
+
+// ✅ Get products by category (for dashboard category sections)
+router.get('/category/:categoryName', async (req, res) => {
+    try {
+        const { categoryName } = req.params;
+        const products = await Product.find({ category: categoryName })
+            .sort({ createdAt: -1 })
+            .limit(6);
+        
+        res.json(products);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+});
+
 // ✅ Get a single product by ID
 router.get('/:id', async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
-
+        
         if (!product) {
             return res.status(404).json({ message: "Product not found!" });
         }
-
+        
         res.json(product);
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });

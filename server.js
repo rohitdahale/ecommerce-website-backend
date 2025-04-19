@@ -19,6 +19,9 @@ connectDB(); // Connect to MongoDB
 app.use('/api/auth', require('./routes/auth'));  // Authentication Routes
 app.use('/api/admin', require('./routes/adminRoutes')); // Admin Routes
 app.use('/api/products', require('./routes/productRoutes')); // Product Routes (For Users)
+app.use('/api/orders', require('./routes/orderRoutes')); // Order Routes (New)
+app.use('/api/cart', require('./routes/cartRoutes')); // Cart Routes (New)
+app.use('/api/wishlist', require('./routes/wishlistRoutes')); // Wishlist Routes
 
 // ✅ Error Handling Middleware
 app.use((err, req, res, next) => {
