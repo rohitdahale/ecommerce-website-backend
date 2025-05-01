@@ -23,7 +23,10 @@ router.get('/', protect, async (req, res) => {
     } else {
       // Calculate total price
       cart = cart.toObject();
+      // Filter out null products before calculating total
       cart.total = cart.items.reduce((sum, item) => {
+        // Skip items with null products
+        if (!item.product) return sum;
         return sum + (item.product.price * item.quantity);
       }, 0);
     }
@@ -39,15 +42,27 @@ router.post('/add', protect, async (req, res) => {
   try {
     const { productId, quantity } = req.body;
     
+    console.log("Cart add request received:", { productId, quantity, userId: req.userId });
+    
     // Validate input
     if (!productId) {
       return res.status(400).json({ message: "Product ID is required" });
+    }
+    
+    // Validate product ID format before querying
+    if (!productId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({ message: "Invalid product ID format" });
     }
     
     // Check if product exists
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
+    }
+    
+    // Check if product is in stock
+    if (!product.inStock) {
+      return res.status(400).json({ message: "Product is out of stock" });
     }
     
     // Find user's cart or create new one
@@ -85,13 +100,22 @@ router.post('/add', protect, async (req, res) => {
     
     // Calculate total price
     const cartObj = cart.toObject();
+    
+    // Filter out null products before calculating total
     cartObj.total = cartObj.items.reduce((sum, item) => {
+      // Check if item.product exists before accessing its properties
+      if (!item.product) return sum;
       return sum + (item.product.price * item.quantity);
     }, 0);
     
     res.status(200).json(cartObj);
   } catch (error) {
-    res.status(500).json({ message: "Error adding item to cart", error: error.message });
+    console.error("Cart add server error:", error);
+    res.status(500).json({ 
+      message: "Error adding item to cart", 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'production' ? '🥞' : error.stack
+    });
   }
 });
 
@@ -114,7 +138,7 @@ router.put('/update', protect, async (req, res) => {
     
     // Find item in cart
     const itemIndex = cart.items.findIndex(item => 
-      item.product.toString() === productId
+      item.product && item.product.toString() === productId
     );
     
     if (itemIndex === -1) {
@@ -139,7 +163,11 @@ router.put('/update', protect, async (req, res) => {
     
     // Calculate total price
     const cartObj = cart.toObject();
+    
+    // Filter out null products before calculating total
     cartObj.total = cartObj.items.reduce((sum, item) => {
+      // Check if item.product exists before accessing its properties
+      if (!item.product) return sum;
       return sum + (item.product.price * item.quantity);
     }, 0);
     
@@ -163,7 +191,7 @@ router.delete('/remove/:productId', protect, async (req, res) => {
     
     // Find item in cart
     const itemIndex = cart.items.findIndex(item => 
-      item.product.toString() === productId
+      item.product && item.product.toString() === productId
     );
     
     if (itemIndex === -1) {
@@ -184,7 +212,11 @@ router.delete('/remove/:productId', protect, async (req, res) => {
     
     // Calculate total price
     const cartObj = cart.toObject();
+    
+    // Filter out null products before calculating total
     cartObj.total = cartObj.items.reduce((sum, item) => {
+      // Check if item.product exists before accessing its properties
+      if (!item.product) return sum;
       return sum + (item.product.price * item.quantity);
     }, 0);
     

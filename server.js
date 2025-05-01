@@ -23,6 +23,7 @@ app.use('/api/orders', require('./routes/orderRoutes')); // Order Routes (New)
 app.use('/api/cart', require('./routes/cartRoutes')); // Cart Routes (New)
 app.use('/api/wishlist', require('./routes/wishlistRoutes')); // Wishlist Routes
 
+
 // ✅ Error Handling Middleware
 app.use((err, req, res, next) => {
     console.error(err.stack);
